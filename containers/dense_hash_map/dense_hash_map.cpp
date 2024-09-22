@@ -7,31 +7,31 @@
 #include <benchmark/benchmark.h>
 
 namespace llc {
-    enum class node_state {
+    enum class NodeState {
         EMPTY,
         IN_USE,
         ERASED
     };
 
     template <class Key, class Value>
-    struct node {
-        node_state state = node_state::EMPTY;
+    struct Node {
+        NodeState state = NodeState::EMPTY;
         Key key;
         Value value;
     };
 
     template <class Key, class Value, class Hash = std::hash<Key>>
-    class dense_hash_map {
+    class DenseHashMap {
     public:
-        dense_hash_map(size_t capacity) : _capacity(capacity) {
-            _nodes = new node<Key, Value>[_capacity];
+        DenseHashMap(size_t capacity) : _capacity(capacity) {
+            _nodes = new Node<Key, Value>[_capacity];
             
             for (size_t i = 0; i < _capacity; ++i) {
-                _nodes[i] = node<Key, Value>();
+                _nodes[i] = Node<Key, Value>();
             }
         }
 
-        dense_hash_map() : dense_hash_map(3) {}
+        DenseHashMap() : DenseHashMap(3) {}
 
         size_t size() const { return _size; }
         size_t capacity() const { return _capacity; }
@@ -41,10 +41,10 @@ namespace llc {
 
             size_t count = 0;
             while (count < _capacity) {
-                if (_nodes[index].state == node_state::EMPTY)
+                if (_nodes[index].state == NodeState::EMPTY)
                     return false;
 
-                if (_nodes[index].state == node_state::IN_USE
+                if (_nodes[index].state == NodeState::IN_USE
                         && _nodes[index].key == key)
                     return true;
 
@@ -73,12 +73,12 @@ namespace llc {
         void rehash() {
             size_t n_capacity = _capacity << 1;
 
-            node<Key, Value>* n_nodes = new node<Key, Value>[n_capacity];
+            Node<Key, Value>* n_nodes = new Node<Key, Value>[n_capacity];
             for (size_t i = 0; i < n_capacity; i++)
-                n_nodes[i] = node<Key, Value>();
+                n_nodes[i] = Node<Key, Value>();
 
             for (size_t i = 0; i < _capacity; ++i) {
-                if (_nodes[i].state == node_state::IN_USE) {
+                if (_nodes[i].state == NodeState::IN_USE) {
                     size_t index;
                     (void) put(_nodes[i].key, n_nodes, n_capacity, index);
                     n_nodes[index].value = _nodes[i].value;
@@ -91,20 +91,20 @@ namespace llc {
             _capacity = n_capacity;
         }
 
-        bool put(const Key& key, node<Key, Value>* nodes, size_t capacity, size_t& index) {
+        bool put(const Key& key, Node<Key, Value>* nodes, size_t capacity, size_t& index) {
             index = getIndex(key, capacity);
 
             size_t count = 0;
 
             while (count < capacity) {
-                if (nodes[index].state == node_state::IN_USE 
+                if (nodes[index].state == NodeState::IN_USE 
                         && nodes[index].key == key) {
                     return false;
                 } 
                 
-                if (nodes[index].state == node_state::EMPTY || nodes[index].state == node_state::ERASED) {
+                if (nodes[index].state == NodeState::EMPTY || nodes[index].state == NodeState::ERASED) {
                     nodes[index].key = key;
-                    nodes[index].state = node_state::IN_USE;
+                    nodes[index].state = NodeState::IN_USE;
                     return true;
                 } 
 
@@ -126,7 +126,7 @@ namespace llc {
         size_t _size = 0;
         Hash _hash;
 
-        node<Key, Value>* _nodes;
+        Node<Key, Value>* _nodes;
     };
 }
 
@@ -169,7 +169,7 @@ BENCHMARK(BM_StdUnorderedMap);
 
 static void BM_LlcDenseHashMap(benchmark::State& state) {
     for (auto _ : state) {
-        test<llc::dense_hash_map<int64_t, int64_t>>("llc::dense_hash_map");
+        test<llc::DenseHashMap<int64_t, int64_t>>("llc::DenseHashMap");
     }
 }
 BENCHMARK(BM_LlcDenseHashMap);

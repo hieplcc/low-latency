@@ -1,1 +1,6 @@
 .vscode
+docs/
+containers/simple_pool_allocator/simple_pool_allocator
+techniques/branch_reduction/branch_reduction
+techniques/cache_warming/cache_warming
+techniques/vectorize/vectorize

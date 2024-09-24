@@ -1,1 +1,1 @@
-# C++ techniques and patterns for low-latency applications
+# Low-Latency C++ Practices
